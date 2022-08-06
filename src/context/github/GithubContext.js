@@ -5,27 +5,37 @@ const GithubContext = createContext();
 
 export const GithubProvider = ({ children }) => {
   const initialState = {
-    user: [],
+    users: [],
     loading: true,
   };
 
   const [state, dispatch] = useReducer(githubReducer, initialState);
 
-  const fetchUsers = async () => {
-    const response = await fetch(`https://api.github.com/users`, {
-      headers: { 'Content-Type': 'application/json' },
+  const searchUsers = async (text) => {
+    setLoading();
+    const params = new URLSearchParams({
+      q: text,
     });
-    const data = await response.json();
+    const response = await fetch(
+      `https://api.github.com/search/users?${params}`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    const { items } = await response.json();
 
     dispatch({
       type: 'GET_USERS',
-      payload: data,
+      payload: items,
     });
   };
 
+  //Set Loading
+  const setLoading = () => dispatch({ type: 'SET_LOADING' });
+
   return (
     <GithubContext.Provider
-      value={{ users: state.users, loading: state.loading, fetchUsers }}
+      value={{ users: state.users, loading: state.loading, searchUsers }}
     >
       {children}
     </GithubContext.Provider>
